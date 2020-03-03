@@ -1,0 +1,248 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Vue+ElementUi table 实现剪切列效果并做缓存处理 | Gridea</title>
+<link rel="shortcut icon" href="https://github.com/pseudo-god/pseudo-god.github.io/favicon.ico?v=1583223136819">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://github.com/pseudo-god/pseudo-god.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="Vue+ElementUi table 实现剪切列效果并做缓存处理 | Gridea - Atom Feed" href="https://github.com/pseudo-god/pseudo-god.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="筛选框代码结构
+ &lt;el-col v-for=&quot;(item, index) in tableColumn&quot; :key=&quot;index&quot; :span=&quot;12&quot;&gt;
+     ..." />
+    <meta name="keywords" content="vue,elementui,table" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://github.com/pseudo-god/pseudo-god.github.io">
+  <img class="avatar" src="https://github.com/pseudo-god/pseudo-god.github.io/images/avatar.png?v=1583223136819" alt="">
+  </a>
+  <h1 class="site-title">
+    Gridea
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              Vue+ElementUi table 实现剪切列效果并做缓存处理
+            </h2>
+            <div class="post-info">
+              <span>
+                2020-03-03
+              </span>
+              <span>
+                2 min read
+              </span>
+              
+                <a href="https://github.com/pseudo-god/pseudo-god.github.io/tag/V-mxYqtpF/" class="post-tag">
+                  # vue
+                </a>
+              
+                <a href="https://github.com/pseudo-god/pseudo-god.github.io/tag/3pR8gA-GjA/" class="post-tag">
+                  # elementui
+                </a>
+              
+                <a href="https://github.com/pseudo-god/pseudo-god.github.io/tag/gIEuFpWXbh/" class="post-tag">
+                  # table
+                </a>
+              
+            </div>
+            
+              <img class="post-feature-image" src="https://github.com/pseudo-god/pseudo-god.github.io/post-images/vueelementui-table-shi-xian-jian-qie-lie-xiao-guo-bing-zuo-huan-cun-chu-li.png" alt="">
+            
+            <div class="post-content-wrapper">
+              <div class="post-content">
+                <h3 id="筛选框代码结构">筛选框代码结构</h3>
+<pre><code> &lt;el-col v-for=&quot;(item, index) in tableColumn&quot; :key=&quot;index&quot; :span=&quot;12&quot;&gt;
+                &lt;el-checkbox v-model=&quot;column[item.prop]&quot; @change=&quot;showHide(item.prop)&quot;&gt;{{ $t(`device.${item.prop}`) }}&lt;/el-checkbox&gt;
+&lt;/el-col&gt;
+</code></pre>
+<h3 id="table结构">Table结构</h3>
+<pre><code> &lt;template v-for=&quot;(item,index) in tableColumn&quot;&gt;
+    &lt;el-table-column
+    v-if=&quot;item.isShow&quot;
+    :key=&quot;index&quot;
+    align=&quot;center&quot;
+    :prop=&quot;item.prop&quot;
+    :show-overflow-tooltip=&quot;item.showOverflowTooltip&quot;
+    :label=&quot;item.prop&quot;
+    :formatter=&quot;item.formatter&quot;
+    /&gt;
+&lt;/template&gt;
+</code></pre>
+<h3 id="data-数据">Data 数据</h3>
+<blockquote>
+<p>这里默认写上isShow，用来控制table默认显示的列表项</p>
+</blockquote>
+<pre><code>column: {},  //用来记录复选框的状态
+tableColumn: [
+        { prop: 'id', label: '设备编号', showOverflowTooltip: true },
+        { prop: 'ip', label: 'IP地址', showOverflowTooltip: true, isShow: true }
+]
+</code></pre>
+<h3 id="method">Method</h3>
+<pre><code>// 选择列表项显示隐藏
+showHide: function(prop) {
+    this.tableColumn.filter(item =&gt; item.prop === prop)[0].isShow = this.column[prop];
+    saveObjArr('terminalManageListItem', this.column);
+    //这个很重要，不然会导致页面高度问题
+    this.$nextTick(() =&gt; {
+     this.$refs.multipleTable.doLayout();
+    });
+},
+ // 从localstorage读取列表显示信息， 在页面进入时，调用一次即可，用来记录复选框的状态
+getShowColumn() {
+    const terminalManageListItem = getObjArr('terminalManageListItem');
+    this.tableColumn.forEach(item =&gt; {
+    if (terminalManageListItem) {
+        if (terminalManageListItem[item.prop]) {
+        item.isShow = true;
+        } else {
+        // 起一个默认值占位的作用
+        item.isShow = false;
+        }
+    }
+    this.$set(this.column, item.prop, !!item.isShow);
+    });
+}
+</code></pre>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li>
+<ul>
+<li><a href="#%E7%AD%9B%E9%80%89%E6%A1%86%E4%BB%A3%E7%A0%81%E7%BB%93%E6%9E%84">筛选框代码结构</a></li>
+<li><a href="#table%E7%BB%93%E6%9E%84">Table结构</a></li>
+<li><a href="#data-%E6%95%B0%E6%8D%AE">Data 数据</a></li>
+<li><a href="#method">Method</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://github.com/pseudo-god/pseudo-god.github.io/post/hello-gridea/">
+              <h3 class="post-title">
+                Hello Gridea
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://github.com/pseudo-god/pseudo-god.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

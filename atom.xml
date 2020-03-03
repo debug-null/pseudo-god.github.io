@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://github.com/pseudo-god/pseudo-god.github.io</id>
     <title>Gridea</title>
-    <updated>2020-03-03T01:38:44.187Z</updated>
+    <updated>2020-03-03T08:12:19.204Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://github.com/pseudo-god/pseudo-god.github.io"/>
     <link rel="self" href="https://github.com/pseudo-god/pseudo-god.github.io/atom.xml"/>
@@ -10,6 +10,68 @@
     <logo>https://github.com/pseudo-god/pseudo-god.github.io/images/avatar.png</logo>
     <icon>https://github.com/pseudo-god/pseudo-god.github.io/favicon.ico</icon>
     <rights>All rights reserved 2020, Gridea</rights>
+    <entry>
+        <title type="html"><![CDATA[Vue+ElementUi table 实现剪切列效果并做缓存处理]]></title>
+        <id>https://github.com/pseudo-god/pseudo-god.github.io/post/vueelementui-table-shi-xian-jian-qie-lie-xiao-guo-bing-zuo-huan-cun-chu-li/</id>
+        <link href="https://github.com/pseudo-god/pseudo-god.github.io/post/vueelementui-table-shi-xian-jian-qie-lie-xiao-guo-bing-zuo-huan-cun-chu-li/">
+        </link>
+        <updated>2020-03-03T07:49:55.000Z</updated>
+        <content type="html"><![CDATA[<h3 id="筛选框代码结构">筛选框代码结构</h3>
+<pre><code> &lt;el-col v-for=&quot;(item, index) in tableColumn&quot; :key=&quot;index&quot; :span=&quot;12&quot;&gt;
+                &lt;el-checkbox v-model=&quot;column[item.prop]&quot; @change=&quot;showHide(item.prop)&quot;&gt;{{ $t(`device.${item.prop}`) }}&lt;/el-checkbox&gt;
+&lt;/el-col&gt;
+</code></pre>
+<h3 id="table结构">Table结构</h3>
+<pre><code> &lt;template v-for=&quot;(item,index) in tableColumn&quot;&gt;
+    &lt;el-table-column
+    v-if=&quot;item.isShow&quot;
+    :key=&quot;index&quot;
+    align=&quot;center&quot;
+    :prop=&quot;item.prop&quot;
+    :show-overflow-tooltip=&quot;item.showOverflowTooltip&quot;
+    :label=&quot;item.prop&quot;
+    :formatter=&quot;item.formatter&quot;
+    /&gt;
+&lt;/template&gt;
+</code></pre>
+<h3 id="data-数据">Data 数据</h3>
+<blockquote>
+<p>这里默认写上isShow，用来控制table默认显示的列表项</p>
+</blockquote>
+<pre><code>column: {},  //用来记录复选框的状态
+tableColumn: [
+        { prop: 'id', label: '设备编号', showOverflowTooltip: true },
+        { prop: 'ip', label: 'IP地址', showOverflowTooltip: true, isShow: true }
+]
+</code></pre>
+<h3 id="method">Method</h3>
+<pre><code>// 选择列表项显示隐藏
+showHide: function(prop) {
+    this.tableColumn.filter(item =&gt; item.prop === prop)[0].isShow = this.column[prop];
+    saveObjArr('terminalManageListItem', this.column);
+    //这个很重要，不然会导致页面高度问题
+    this.$nextTick(() =&gt; {
+     this.$refs.multipleTable.doLayout();
+    });
+},
+ // 从localstorage读取列表显示信息， 在页面进入时，调用一次即可，用来记录复选框的状态
+getShowColumn() {
+    const terminalManageListItem = getObjArr('terminalManageListItem');
+    this.tableColumn.forEach(item =&gt; {
+    if (terminalManageListItem) {
+        if (terminalManageListItem[item.prop]) {
+        item.isShow = true;
+        } else {
+        // 起一个默认值占位的作用
+        item.isShow = false;
+        }
+    }
+    this.$set(this.column, item.prop, !!item.isShow);
+    });
+}
+</code></pre>
+]]></content>
+    </entry>
     <entry>
         <title type="html"><![CDATA[Hello Gridea]]></title>
         <id>https://github.com/pseudo-god/pseudo-god.github.io/post/hello-gridea/</id>
